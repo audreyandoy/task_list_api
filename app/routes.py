@@ -1,4 +1,5 @@
 from app import db
+import requests
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime
@@ -26,7 +27,7 @@ def handle_tasks():
                 "id": task.id,
                 "title": task.title,
                 "description": task.description,
-                "completed_at": task.completed_at,
+                "is_complete": False if task.completed_at == None else task.completed_at
             })
         return jsonify(tasks_response)
 
@@ -58,10 +59,7 @@ def handle_tasks():
                     "is_complete": False if new_task.completed_at == None else True  
                 }
             }, 201)
-        # else:
-        #     return make_response({
-        #     "details": {"Invalid data"}
-        #     }, 400)
+  
 
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(task_id):
@@ -101,14 +99,19 @@ def handle_task(task_id):
             "details": f'Task {task.id} "{task.title}" successfully deleted'
         })
 
+#################### WAVE 3 ######################## 
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
-    task = Task.query.get(task_id)
-    if task is None:
-        return make_response("", 404)
+    
 
     if request.method == "PATCH":
+        task = Task.query.get(task_id)
+
+        # if task is None:
+        #     return make_response("", 404)
+        # else:
+
         form_data = request.get_json()
 
         task.completed_at = datetime.today()     

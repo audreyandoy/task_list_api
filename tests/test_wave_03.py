@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 
+
 def test_toggle_complete_on_incomplete_task(client, one_task):
     # Arrange
     """

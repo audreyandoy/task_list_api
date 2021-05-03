@@ -6,4 +6,4 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String, nullable = False)
     completed_at = db.Column(db.DateTime, nullable=True)
-    goal_id = db.Column('Goal', db.Integer, db.ForeignKey('goal.id'), nullable=True)
+    goal_id = db.Column(db.Integer, db.ForeignKey('goal.id'), nullable=True)
