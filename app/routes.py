@@ -1,10 +1,13 @@
-from app import db
 import requests
+from app import db
 from app.models.task import Task
+from app.models.goal import Goal 
 from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
 
 ### WAVE 1 ###
 
@@ -101,20 +104,25 @@ def handle_task(task_id):
 
 #################### WAVE 3 ######################## 
 
-@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+@tasks_bp.route("/<task_id>/complete", methods=["PATCH"])
 def mark_complete(task_id):
     
 
     if request.method == "PATCH":
         task = Task.query.get(task_id)
 
-        # if task is None:
-        #     return make_response("", 404)
-        # else:
+        if task is None:
+            return make_response("", 404)
 
-        form_data = request.get_json()
+        if task.completed_at:
+            task.completed_at = None
+            is_complete = False 
+        else:
+            task.completed_at = datetime.today()
+            is_complete = True
+            path = "https://slack.com/api/chat.postMessage"
+            api_key = app.config["SLACK_TOKEN"]
 
-        task.completed_at = datetime.today()     
 
         db.session.commit()
         return make_response({
@@ -122,27 +130,78 @@ def mark_complete(task_id):
                 "id": task.id,
                 "title": task.title,
                 "description": task.description,
-                "is_complete": True if task.completed_at else False 
+                "is_complete": is_complete 
             }
-        }, 201)
+        }, 200)
 
-@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
-def mark_incomplete(task_id):
-    task = Task.query.get(task_id)
-    if task is None:
+#################### WAVE 5 ######################## 
+
+@goals_bp.route("", methods=["GET", "POST"])
+def handle_goals():
+    if request.method == "GET":
+        goals = Goal.query.all()
+        goals_response = []
+        for goal in goals:
+            goals_response.append({
+                "id": goal.id,
+                "title": goal.title
+            })
+        return jsonify(goals_response)
+
+    if request.method == "POST":
+        request_body = request.get_json()
+
+        print(request_body)
+        # return request_body
+
+        if ("title" not in request_body):
+            return make_response({
+                "details": "Invalid data"
+            }, 400)
+        else: 
+            new_goal = Goal(
+                title = request_body["title"] 
+            )
+        
+            db.session.add(new_goal)
+            db.session.commit()
+
+            return make_response({
+                "goal": {
+                    "id": new_goal.id,
+                    "title": new_goal.title,
+                }
+            }, 201)
+
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+def handle_one_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
         return make_response("", 404)
 
-    if request.method == "PATCH":
+    if request.method == "GET":
+        return make_response({
+            "goal": {
+                "id": goal.id,
+                "title": goal.title
+            }
+        })
+    elif request.method == "PUT":
         form_data = request.get_json()
 
-        task.completed_at = datetime.today()     
+        goal.title = form_data["title"]
 
         db.session.commit()
         return make_response({
-            "task": {
-                "id": task.id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": False 
+            "goal": {
+                "id": goal.id,
+                "title": goal.title
             }
-        }, 201)
+        }, 200)
+    
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+        return make_response({
+            "details": f'Goal {goal.id} "{goal.title}" successfully deleted'
+        })
