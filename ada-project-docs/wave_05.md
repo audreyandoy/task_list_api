@@ -4,10 +4,9 @@
 
 Our task list API should be able to work with an entity called `Goal`.
 
-Goals are entities that describe a task a user wants to complete. They contain a:
+Goals are entities that describe a task a user wants to complete.
 
-- title to name the goal
-- description to hold details about the goal
+They contain a title to name the goal.
 
 Our goal for this wave is to be able to create, read, update, and delete different goals.
 
@@ -17,7 +16,7 @@ Our goal for this wave is to be able to create, read, update, and delete differe
 
 There should be a `Goal` model that lives in `app/models/goal.py`.
 
-Goals should contain these attributes. Feel free to change the name of the `goal_id` column if you would like. **The tests require the remaining column to be named exactly** as `title`.
+Goals should contain these attributes. Feel free to change the name of the `goal_id` column if you would like. **The tests require the title column to be named exactly** as `title`.
 
 - `goal_id`: a primary key for each goal
 - `title`: text to name the goal
